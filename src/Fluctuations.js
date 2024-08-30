@@ -20,7 +20,7 @@ const Fluctuations = () => {
 
   const generateData = (start, end) => {
     const data = [];
-    const numDates = 5; // Limiter à 5 dates
+    const numDates = 7; // Limiter à 7 dates
     let currentDate = new Date(start);
     for (let i = 0; i < numDates; i++) {
       const randomDate = new Date(currentDate);
