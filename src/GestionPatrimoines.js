@@ -2,7 +2,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Table, Modal } from 'react-bootstrap';
-import { FaEdit, FaPlus, FaCalculator } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaCalculator, FaTrash } from 'react-icons/fa';
 
 function GestionPatrimoines() {
   const [dateFin, setDateFin] = useState(() => {
@@ -81,6 +81,11 @@ function GestionPatrimoines() {
     setShowModal(true);
   };
 
+  const handleDelete = (index) => {
+    const updatedData = data.filter((_, i) => i !== index);
+    setData(updatedData);
+  };
+
   const handleSaveItem = () => {
     const updatedData = data.map(item => 
       item.libelle === currentItem.libelle ? currentItem : item
@@ -94,7 +99,6 @@ function GestionPatrimoines() {
     setShowModal(false);
   };
 
-  // Calculer le total des valeurs actuelles
   const totalValeurActuelle = data.reduce((total, item) => {
     return total + (item.valeurActuelle || 0);
   }, 0);
@@ -156,10 +160,12 @@ function GestionPatrimoines() {
                 <Button variant="warning" onClick={() => handleShowModal(item)}>
                   <FaEdit /> Modifier
                 </Button>
+                <Button variant="danger" onClick={() => handleDelete(index)}>
+                  <FaTrash /> Supprimer
+                </Button>
               </td>
             </tr>
           ))}
-          {/* Ligne pour afficher le total */}
           <tr>
             <td colSpan="6" className="text-right"><strong>Total</strong></td>
             <td>{totalValeurActuelle.toFixed(2)}</td>
@@ -168,7 +174,6 @@ function GestionPatrimoines() {
         </tbody>
       </Table>
 
-      {/* Modal pour ajouter/modifier un élément */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{isEditing ? 'Modifier' : 'Ajouter'} un Élément</Modal.Title>
@@ -225,7 +230,7 @@ function GestionPatrimoines() {
           <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
           <Button variant="primary" onClick={handleSaveItem}>
             {isEditing ? 'Modifier' : 'Ajouter'}
-          </Button>
+            </Button>
         </Modal.Footer>
       </Modal>
     </Container>
