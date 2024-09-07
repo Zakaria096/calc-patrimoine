@@ -2,6 +2,19 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const cors = require('cors');
+
+
+// Configurer CORS pour autoriser des requêtes depuis ton frontend
+const corsOptions = {
+  origin: 'https://ton-frontend-deployé.com', // Remplace par l'URL de ton frontend
+  methods: 'GET,POST,PUT,DELETE', // Méthodes HTTP autorisées
+};
+
+app.use(cors(corsOptions));
+
+
+
 
 app.use(express.json());
 
