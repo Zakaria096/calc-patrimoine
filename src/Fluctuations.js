@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Fluctuations = () => {
   const [startDate, setStartDate] = useState(new Date());
@@ -20,20 +20,14 @@ const Fluctuations = () => {
 
   const generateData = (start, end) => {
     const data = [];
-    const numDates = 7; // Limiter à 7 dates
     let currentDate = new Date(start);
-    for (let i = 0; i < numDates; i++) {
-      const randomDate = new Date(currentDate);
-      randomDate.setMonth(randomDate.getMonth() + Math.floor(Math.random() * 6) + 5); // Ajoute 5 à 10 mois aléatoires
-      if (randomDate > end) break;
+    while (currentDate <= end) {
       data.push({
-        date: randomDate.toISOString().split('T')[0],
+        date: currentDate.toISOString().split('T')[0],
         value: Math.floor(Math.random() * 500) + 100, // Génère une valeur aléatoire entre 100 et 600
       });
-      currentDate = randomDate;
+      currentDate.setMonth(currentDate.getMonth() + 1); // Ajoute 1 mois
     }
-    // Trier les dates
-    data.sort((a, b) => new Date(a.date) - new Date(b.date));
     setData(data);
   };
 
@@ -53,6 +47,10 @@ const Fluctuations = () => {
               onChange={(date) => setStartDate(date)} 
               dateFormat="yyyy-MM-dd"
               className="form-control"
+              todayButton="Aujourd'hui"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
             />
           </Form.Group>
         </Col>
@@ -64,7 +62,10 @@ const Fluctuations = () => {
               onChange={(date) => setEndDate(date)} 
               dateFormat="yyyy-MM-dd"
               className="form-control"
-              readOnly
+              todayButton="Aujourd'hui"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
             />
           </Form.Group>
         </Col>

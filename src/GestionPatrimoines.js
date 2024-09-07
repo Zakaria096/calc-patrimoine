@@ -2,35 +2,19 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Table, Modal } from 'react-bootstrap';
-import { FaEdit, FaPlus, FaCalculator, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaPlus, FaCalculator, FaTrash, FaTimes } from 'react-icons/fa';
 
 function GestionPatrimoines() {
   const [dateFin, setDateFin] = useState(() => {
     const savedDateFin = localStorage.getItem('dateFin');
     return savedDateFin ? new Date(savedDateFin) : '';
   });
-  const [data, setData] = useState(() => {
-    const savedData = localStorage.getItem('patrimoineData');
-    return savedData ? JSON.parse(savedData) : [
-      {
-        possesseur: { nom: "John Doe" },
-        libelle: "MacBook Pro",
-        valeur: 4000000,
-        dateDebut: "2023-12-25T00:00:00.000Z",
-        dateFin: null,
-        tauxAmortissement: 5
-      },
-    ];
-  });
 
-  useEffect(() => {
-    localStorage.setItem('patrimoineData', JSON.stringify(data));
-    localStorage.setItem('dateFin', dateFin);
-  }, [data, dateFin]);
-
+  const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState({
+    id: Date.now(),
     possesseur: { nom: '' },
     libelle: '',
     valeur: 0,
@@ -39,7 +23,19 @@ function GestionPatrimoines() {
     tauxAmortissement: null,
     jour: null,
     valeurConstante: null,
+    cloture: false,
   });
+
+  useEffect(() => {
+    fetch('/api/data')
+      .then(response => response.json())
+      .then(data => setData(data))
+      .catch(error => console.error('Error loading data:', error));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('dateFin', dateFin);
+  }, [dateFin]);
 
   const handleCalculate = () => {
     if (!dateFin) {
@@ -50,6 +46,7 @@ function GestionPatrimoines() {
     const date = new Date(dateFin);
 
     const calculateValeurActuelle = (item) => {
+      if (item.cloture) return 0;
       if (item.libelle === "Alternance" || item.libelle === "Survie") {
         return item.valeur + (item.valeurConstante ? item.valeurConstante * item.jour : 0);
       } else {
@@ -64,11 +61,13 @@ function GestionPatrimoines() {
     }));
 
     setData(updatedData);
+    saveData(updatedData);
   };
 
   const handleShowModal = (item = null) => {
     setIsEditing(!!item);
     setCurrentItem(item || {
+      id: Date.now(),
       possesseur: { nom: '' },
       libelle: '',
       valeur: 0,
@@ -77,32 +76,51 @@ function GestionPatrimoines() {
       tauxAmortissement: null,
       jour: null,
       valeurConstante: null,
+      cloture: false,
     });
     setShowModal(true);
   };
 
-  const handleDelete = (index) => {
-    const updatedData = data.filter((_, i) => i !== index);
+  const handleSaveItem = () => {
+    const updatedData = isEditing
+      ? data.map(item => (item.id === currentItem.id ? currentItem : item))
+      : [...data, { ...currentItem, id: Date.now() }];
+
     setData(updatedData);
+    saveData(updatedData);
+    setShowModal(false);
   };
 
-  const handleSaveItem = () => {
-    const updatedData = data.map(item => 
-      item.libelle === currentItem.libelle ? currentItem : item
-    );
-
-    if (!isEditing) {
-      updatedData.push(currentItem);
-    }
-
+  const handleDelete = (id) => {
+    const updatedData = data.filter(item => item.id !== id);
     setData(updatedData);
-    setShowModal(false);
+    saveData(updatedData);
+  };
+
+  const handleCloture = (id) => {
+    const updatedData = data.map(item => item.id === id ? { ...item, cloture: true } : item);
+    setData(updatedData);
+    saveData(updatedData);
+  };
+
+  const saveData = (updatedData) => {
+    fetch('/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
+    })
+    .then(response => response.json())
+    .then(data => console.log('Data saved successfully:', data))
+    .catch(error => console.error('Error saving data:', error));
   };
 
   const totalValeurActuelle = data.reduce((total, item) => {
     return total + (item.valeurActuelle || 0);
   }, 0);
 
+  
   return (
     <Container className="gestion-patrimoines">
       <Row className="my-4">
@@ -123,7 +141,7 @@ function GestionPatrimoines() {
         </Col>
         <Col md={2} className="d-flex align-items-end">
           <Button variant="primary" onClick={handleCalculate} className="w-100">
-            <FaCalculator /> Calculate
+            <FaCalculator /> Calculer
           </Button>
         </Col>
         <Col md={2} className="d-flex align-items-end">
@@ -132,7 +150,6 @@ function GestionPatrimoines() {
           </Button>
         </Col>
       </Row>
-
       <Table striped bordered hover className="table-styled">
         <thead>
           <tr>
@@ -147,8 +164,8 @@ function GestionPatrimoines() {
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
-            <tr key={index}>
+          {data.map((item) => (
+            <tr key={item.id}>
               <td>{item.possesseur.nom}</td>
               <td>{item.libelle}</td>
               <td>{item.valeur}</td>
@@ -160,8 +177,11 @@ function GestionPatrimoines() {
                 <Button variant="warning" onClick={() => handleShowModal(item)}>
                   <FaEdit /> Modifier
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(index)}>
+                <Button variant="danger" onClick={() => handleDelete(item.id)}>
                   <FaTrash /> Supprimer
+                </Button>
+                <Button variant="secondary" onClick={() => handleCloture(item.id)}>
+                  <FaTimes /> Clôturer
                 </Button>
               </td>
             </tr>
@@ -173,68 +193,63 @@ function GestionPatrimoines() {
           </tr>
         </tbody>
       </Table>
-
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{isEditing ? 'Modifier' : 'Ajouter'} un Élément</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="formNomPossesseur">
-              <Form.Label>Nom du Possesseur</Form.Label>
-              <Form.Control 
-                type="text" 
-                value={currentItem.possesseur.nom} 
-                onChange={(e) => setCurrentItem({ ...currentItem, possesseur: { nom: e.target.value } })} 
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formLibelle">
-              <Form.Label>Libelle</Form.Label>
-              <Form.Control 
-                type="text" 
-                value={currentItem.libelle} 
-                onChange={(e) => setCurrentItem({ ...currentItem, libelle: e.target.value })} 
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formValeur">
-              <Form.Label>Valeur</Form.Label>
-              <Form.Control 
-                type="number" 
-                value={currentItem.valeur} 
-                onChange={(e) => setCurrentItem({ ...currentItem, valeur: parseFloat(e.target.value) })} 
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formDateDebut">
-              <Form.Label>Date de Début</Form.Label>
-              <Form.Control 
-                type="date" 
-                value={currentItem.dateDebut ? new Date(currentItem.dateDebut).toISOString().split('T')[0] : ''} 
-                onChange={(e) => setCurrentItem({ ...currentItem, dateDebut: e.target.value })} 
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formTauxAmortissement">
-              <Form.Label>Taux d'Amortissement</Form.Label>
-              <Form.Control 
-                type="number" 
-                value={currentItem.tauxAmortissement || ''} 
-                onChange={(e) => setCurrentItem({ ...currentItem, tauxAmortissement: parseFloat(e.target.value) || null })} 
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-          <Button variant="primary" onClick={handleSaveItem}>
-            {isEditing ? 'Modifier' : 'Ajouter'}
-            </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
-  );
+      <Modal.Header closeButton>
+        <Modal.Title>{isEditing ? 'Modifier' : 'Ajouter'} un Élément</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group controlId="formNomPossesseur">
+            <Form.Label>Nom du Possesseur</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={currentItem.possesseur.nom} 
+              onChange={(e) => setCurrentItem({ ...currentItem, possesseur: { nom: e.target.value } })} 
+            />
+          </Form.Group>
+          <Form.Group controlId="formLibelle">
+            <Form.Label>Libelle</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={currentItem.libelle} 
+              onChange={(e) => setCurrentItem({ ...currentItem, libelle: e.target.value })} 
+            />
+          </Form.Group>
+          <Form.Group controlId="formValeur">
+            <Form.Label>Valeur</Form.Label>
+            <Form.Control 
+              type="number" 
+              value={currentItem.valeur} 
+              onChange={(e) => setCurrentItem({ ...currentItem, valeur: parseFloat(e.target.value) })} 
+            />
+          </Form.Group>
+          <Form.Group controlId="formDateDebut">
+            <Form.Label>Date de Début</Form.Label>
+            <Form.Control 
+              type="date" 
+              value={currentItem.dateDebut ? new Date(currentItem.dateDebut).toISOString().split('T')[0] : ''} 
+              onChange={(e) => setCurrentItem({ ...currentItem, dateDebut: e.target.value })} 
+            />
+          </Form.Group>
+          <Form.Group controlId="formTauxAmortissement">
+            <Form.Label>Taux d'Amortissement</Form.Label>
+            <Form.Control 
+              type="number" 
+              value={currentItem.tauxAmortissement || ''} 
+              onChange={(e) => setCurrentItem({ ...currentItem, tauxAmortissement: parseFloat(e.target.value) || null })} 
+            />
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
+        <Button variant="primary" onClick={handleSaveItem}>
+          {isEditing ? 'Modifier' : 'Ajouter'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  </Container>
+);
 }
 
 export default GestionPatrimoines;

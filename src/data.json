@@ -1,67 +1,107 @@
 [
-  { "model": "Personne", "data": { "nom": "John Doe" } },
   {
-    "model": "Patrimoine",
-    "data": {
-      "possesseur": { "nom": "John Doe" },
-      "possessions": [
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "MacBook Pro",
-          "valeur": 4000000,
-          "dateDebut": "2023-12-25T00:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": 5
-        },
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "Alternance",
-          "valeur": 0,
-          "dateDebut": "2022-12-31T21:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": null,
-          "jour": 1,
-          "valeurConstante": 500000
-        },
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "Survie",
-          "valeur": 0,
-          "dateDebut": "2022-12-31T21:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": null,
-          "jour": 2,
-          "valeurConstante": -300000
-        },
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "MacBook Pro",
-          "valeur": 4000000,
-          "dateDebut": "2023-12-25T00:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": 5
-        },
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "Alternance",
-          "valeur": 0,
-          "dateDebut": "2022-12-31T21:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": null,
-          "jour": 1,
-          "valeurConstante": 500000
-        },
-        {
-          "possesseur": { "nom": "John Doe" },
-          "libelle": "Survie",
-          "valeur": 0,
-          "dateDebut": "2022-12-31T21:00:00.000Z",
-          "dateFin": null,
-          "tauxAmortissement": null,
-          "jour": 2,
-          "valeurConstante": -300000
-        }
-      ]
-    }
+    "id": 1,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "MacBook Pro",
+    "valeur": 4300000,
+    "dateDebut": "2023-12-25",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 5,
+    "jour": null,
+    "valeurConstante": null,
+    "cloture": false,
+    "valeurActuelle": 4085000
+  },
+  {
+    "id": 2,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "Compte épargne",
+    "valeur": 500000,
+    "dateDebut": "2019-01-06",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": -5,
+    "jour": null,
+    "valeurConstante": null,
+    "cloture": false,
+    "valeurActuelle": 625000
+  },
+  {
+    "id": 3,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "Clothes",
+    "valeur": 2000000,
+    "dateDebut": "2020-01-01",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 10,
+    "jour": null,
+    "valeurConstante": null,
+    "cloture": false,
+    "valeurActuelle": 1200000
+  },
+  {
+    "id": 4,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "Alternance",
+    "valeur": 600000,
+    "dateDebut": "2023-02-13",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 0,
+    "jour": 1,
+    "valeurConstante": 600000,
+    "cloture": false,
+    "valeurActuelle": 1200000
+  },
+  {
+    "id": 5,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "Survie",
+    "valeur": 300000,
+    "dateDebut": "2023-02-13",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 0,
+    "jour": 2,
+    "valeurConstante": -300000,
+    "cloture": false,
+    "valeurActuelle": -300000
+  },
+  {
+    "id": 1725717066276,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "Redmi Note 9(lost)",
+    "valeur": 800000,
+    "dateDebut": "2022-12-19",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 15,
+    "jour": null,
+    "valeurConstante": null,
+    "cloture": true,
+    "valeurActuelle": 0
+  },
+  {
+    "id": 1725717157629,
+    "possesseur": {
+      "nom": "John Doe"
+    },
+    "libelle": "samsung Galaxy S23",
+    "valeur": 1600000,
+    "dateDebut": "2024-09-07",
+    "dateFin": "2024-12-25T00:00:00.000Z",
+    "tauxAmortissement": 10,
+    "jour": null,
+    "valeurConstante": null,
+    "cloture": false,
+    "valeurActuelle": 1600000
   }
 ]
