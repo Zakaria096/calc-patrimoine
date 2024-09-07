@@ -3,8 +3,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Table, Modal } from 'react-bootstrap';
 import { FaEdit, FaPlus, FaCalculator, FaTrash, FaTimes } from 'react-icons/fa';
-import axios from 'axios';
-
 
 function GestionPatrimoines() {
   const [dateFin, setDateFin] = useState(() => {
@@ -13,16 +11,20 @@ function GestionPatrimoines() {
   });
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-const fetchData = async () => {
-  try {
-    const response = await axios.get(`${backendUrl}/api/votre-endpoint`);
-    console.log(response.data);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des données:', error);
-  }
-};
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/votre-endpoint`);
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des données');
+      }
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données:', error);
+    }
+  };
 
-fetchData();
+  fetchData();
 
   const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -41,11 +43,21 @@ fetchData();
   });
 
   useEffect(() => {
-    fetch('/api/data')
-      .then(response => response.json())
-      .then(data => setData(data))
-      .catch(error => console.error('Error loading data:', error));
-  }, []);
+    const loadData = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/data`);
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des données');
+        }
+        const data = await response.json();
+        setData(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
+    };
+
+    loadData();
+  }, [backendUrl]);
 
   useEffect(() => {
     localStorage.setItem('dateFin', dateFin);
@@ -117,17 +129,25 @@ fetchData();
     saveData(updatedData);
   };
 
-  const saveData = (updatedData) => {
-    fetch('/api/data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedData),
-    })
-    .then(response => response.json())
-    .then(data => console.log('Data saved successfully:', data))
-    .catch(error => console.error('Error saving data:', error));
+  const saveData = async (updatedData) => {
+    try {
+      const response = await fetch('/api/data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'enregistrement des données');
+      }
+
+      const data = await response.json();
+      console.log('Data saved successfully:', data);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement des données:', error);
+    }
   };
 
   const totalValeurActuelle = data.reduce((total, item) => {
@@ -158,112 +178,138 @@ fetchData();
             <FaCalculator /> Calculer
           </Button>
         </Col>
-        <Col md={2} className="d-flex align-items-end">
-          <Button variant="success" onClick={() => handleShowModal()} className="w-100">
-            <FaPlus /> Ajouter
+        <Col md={6} className="text-right d-flex align-items-center justify-content-end">
+          <h4 className="mb-0">Valeur Totale : {totalValeurActuelle.toLocaleString()} €</h4>
+        </Col>
+      </Row>
+      <Row className="mb-3">
+        <Col>
+          <Button variant="success" onClick={() => handleShowModal()}>
+            <FaPlus /> Ajouter un élément
           </Button>
         </Col>
       </Row>
-      <Table striped bordered hover className="table-styled">
-        <thead>
-          <tr>
-            <th>Possesseur</th>
-            <th>Libelle</th>
-            <th>Valeur Initiale</th>
-            <th>Date de Début</th>
-            <th>Date de Fin</th>
-            <th>Taux d'Amortissement</th>
-            <th>Valeur Actuelle</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item) => (
-            <tr key={item.id}>
-              <td>{item.possesseur.nom}</td>
-              <td>{item.libelle}</td>
-              <td>{item.valeur}</td>
-              <td>{item.dateDebut ? new Date(item.dateDebut).toISOString().split('T')[0] : 'N/A'}</td>
-              <td>{item.dateFin ? new Date(item.dateFin).toISOString().split('T')[0] : 'N/A'}</td>
-              <td>{item.tauxAmortissement ? item.tauxAmortissement + '%' : 'N/A'}</td>
-              <td>{item.valeurActuelle !== undefined ? item.valeurActuelle.toFixed(2) : 'N/A'}</td>
-              <td>
-                <Button variant="warning" onClick={() => handleShowModal(item)}>
-                  <FaEdit /> Modifier
-                </Button>
-                <Button variant="danger" onClick={() => handleDelete(item.id)}>
-                  <FaTrash /> Supprimer
-                </Button>
-                <Button variant="secondary" onClick={() => handleCloture(item.id)}>
-                  <FaTimes /> Clôturer
-                </Button>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td colSpan="6" className="text-right"><strong>Total</strong></td>
-            <td>{totalValeurActuelle.toFixed(2)}</td>
-            <td></td>
-          </tr>
-        </tbody>
-      </Table>
+      <Row>
+        <Col>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Possesseur</th>
+                <th>Libellé</th>
+                <th>Valeur</th>
+                <th>Date de Début</th>
+                <th>Date de Fin</th>
+                <th>Taux d'Amortissement (%)</th>
+                <th>Jours</th>
+                <th>Valeur Constante</th>
+                <th>Valeur Actuelle</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.possesseur.nom}</td>
+                  <td>{item.libelle}</td>
+                  <td>{item.valeur.toLocaleString()} €</td>
+                  <td>{item.dateDebut}</td>
+                  <td>{item.dateFin && item.dateFin.toISOString().split('T')[0]}</td>
+                  <td>{item.tauxAmortissement}</td>
+                  <td>{item.jour}</td>
+                  <td>{item.valeurConstante}</td>
+                  <td>{item.valeurActuelle && item.valeurActuelle.toLocaleString()} €</td>
+                  <td>
+                    <Button variant="warning" size="sm" onClick={() => handleShowModal(item)}>
+                      <FaEdit />
+                    </Button>{' '}
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(item.id)}>
+                      <FaTrash />
+                    </Button>{' '}
+                    <Button variant="secondary" size="sm" onClick={() => handleCloture(item.id)}>
+                      <FaTimes />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-      <Modal.Header closeButton>
-        <Modal.Title>{isEditing ? 'Modifier' : 'Ajouter'} un Élément</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group controlId="formNomPossesseur">
-            <Form.Label>Nom du Possesseur</Form.Label>
-            <Form.Control 
-              type="text" 
-              value={currentItem.possesseur.nom} 
-              onChange={(e) => setCurrentItem({ ...currentItem, possesseur: { nom: e.target.value } })} 
-            />
-          </Form.Group>
-          <Form.Group controlId="formLibelle">
-            <Form.Label>Libelle</Form.Label>
-            <Form.Control 
-              type="text" 
-              value={currentItem.libelle} 
-              onChange={(e) => setCurrentItem({ ...currentItem, libelle: e.target.value })} 
-            />
-          </Form.Group>
-          <Form.Group controlId="formValeur">
-            <Form.Label>Valeur</Form.Label>
-            <Form.Control 
-              type="number" 
-              value={currentItem.valeur} 
-              onChange={(e) => setCurrentItem({ ...currentItem, valeur: parseFloat(e.target.value) })} 
-            />
-          </Form.Group>
-          <Form.Group controlId="formDateDebut">
-            <Form.Label>Date de Début</Form.Label>
-            <Form.Control 
-              type="date" 
-              value={currentItem.dateDebut ? new Date(currentItem.dateDebut).toISOString().split('T')[0] : ''} 
-              onChange={(e) => setCurrentItem({ ...currentItem, dateDebut: e.target.value })} 
-            />
-          </Form.Group>
-          <Form.Group controlId="formTauxAmortissement">
-            <Form.Label>Taux d'Amortissement</Form.Label>
-            <Form.Control 
-              type="number" 
-              value={currentItem.tauxAmortissement || ''} 
-              onChange={(e) => setCurrentItem({ ...currentItem, tauxAmortissement: parseFloat(e.target.value) || null })} 
-            />
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowModal(false)}>Annuler</Button>
-        <Button variant="primary" onClick={handleSaveItem}>
-          {isEditing ? 'Modifier' : 'Ajouter'}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  </Container>
-);
+        <Modal.Header closeButton>
+          <Modal.Title>{isEditing ? 'Modifier l\'élément' : 'Ajouter un élément'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="formPossesseurNom">
+              <Form.Label>Possesseur</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={currentItem.possesseur.nom} 
+                onChange={(e) => setCurrentItem({ ...currentItem, possesseur: { nom: e.target.value } })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formLibelle">
+              <Form.Label>Libellé</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={currentItem.libelle} 
+                onChange={(e) => setCurrentItem({ ...currentItem, libelle: e.target.value })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formValeur">
+              <Form.Label>Valeur</Form.Label>
+              <Form.Control 
+                type="number" 
+                value={currentItem.valeur} 
+                onChange={(e) => setCurrentItem({ ...currentItem, valeur: parseFloat(e.target.value) })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formDateDebut">
+              <Form.Label>Date de Début</Form.Label>
+              <Form.Control 
+                type="date" 
+                value={currentItem.dateDebut} 
+                onChange={(e) => setCurrentItem({ ...currentItem, dateDebut: e.target.value })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formTauxAmortissement">
+              <Form.Label>Taux d'Amortissement (%)</Form.Label>
+              <Form.Control 
+                type="number" 
+                value={currentItem.tauxAmortissement} 
+                onChange={(e) => setCurrentItem({ ...currentItem, tauxAmortissement: parseFloat(e.target.value) })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formJour">
+              <Form.Label>Jours</Form.Label>
+              <Form.Control 
+                type="number" 
+                value={currentItem.jour} 
+                onChange={(e) => setCurrentItem({ ...currentItem, jour: parseFloat(e.target.value) })} 
+              />
+            </Form.Group>
+            <Form.Group controlId="formValeurConstante">
+              <Form.Label>Valeur Constante</Form.Label>
+              <Form.Control 
+                type="number" 
+                value={currentItem.valeurConstante} 
+                onChange={(e) => setCurrentItem({ ...currentItem, valeurConstante: parseFloat(e.target.value) })} 
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Annuler
+          </Button>
+          <Button variant="primary" onClick={handleSaveItem}>
+            Enregistrer
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
+  );
 }
 
 export default GestionPatrimoines;
