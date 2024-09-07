@@ -9,6 +9,18 @@ function GestionPatrimoines() {
     const savedDateFin = localStorage.getItem('dateFin');
     return savedDateFin ? new Date(savedDateFin) : '';
   });
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
+const fetchData = async () => {
+  try {
+    const response = await axios.get(`${backendUrl}/api/votre-endpoint`);
+    console.log(response.data);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données:', error);
+  }
+};
+
+fetchData();
 
   const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
