@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Table, Modal } from 'react-bootstrap';
 import { FaEdit, FaPlus, FaCalculator, FaTrash, FaTimes } from 'react-icons/fa';
+import axios from 'axios';
+
 
 function GestionPatrimoines() {
   const [dateFin, setDateFin] = useState(() => {
